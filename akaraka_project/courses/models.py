@@ -53,7 +53,7 @@ class Lesson(models.Model):
     slug = models.SlugField()
     description = models.TextField(blank=True)
     content_english = models.TextField(help_text="English content/vocabulary")
-    content_dari = models.TextField(help_text="Dari translation/content")
+    content_dari = models.TextField(blank=True, help_text="Dari translation/content (auto-translated if left empty)")
     audio_file = models.FileField(
         upload_to='audio/lessons/',
         null=True,

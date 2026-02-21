@@ -24,8 +24,13 @@
             
             <!-- English Content -->
             <div class="bg-white p-8 rounded-lg shadow mb-8">
-                <h2 class="text-2xl font-bold mb-4">English Content</h2>
-                <div class="prose max-w-none">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold">English Content</h2>
+                    <button onclick="speakEnglish()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+                        🔊 Speak
+                    </button>
+                </div>
+                <div class="prose max-w-none" id="english-content">
                     {{ lesson.content_english|safe }}
                 </div>
             </div>
@@ -44,9 +49,31 @@
             <!-- Dari Content -->
             {% if show_dari %}
                 <div class="bg-blue-50 p-8 rounded-lg shadow mb-8 border-l-4 border-primary">
-                    <h2 class="text-2xl font-bold mb-4 text-primary">Dari Translation</h2>
-                    <div class="prose max-w-none">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-primary">Dari Translation</h2>
+                            {% if lesson.content_dari == lesson.content_english %}
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded">English Fallback</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="speakDariWeb()" title="Browser-based speech (works offline)" class="px-3 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1">
+                                🔊 Speak
+                            </button>
+                            <button id="dari-audio-btn" onclick="playDariAudio()" title="Play generated audio file" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1" style="display: none;">
+                                🎵 Audio
+                            </button>
+                            <button id="dari-audio-ur-btn" onclick="playDariAudioUrdu()" title="Play Urdu audio (fallback)" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1" style="display: none;">
+                                🎵 اردو
+                            </button>
+                        </div>
+                    </div>
+                    <div class="prose max-w-none" id="dari-content">
                         {{ lesson.content_dari|safe }}
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        <audio id="dari-audio-player" class="w-full" controls style="display: none;"></audio>
+                        <audio id="dari-audio-urdu-player" class="w-full" controls style="display: none;"></audio>
                     </div>
                 </div>
             {% endif %}
@@ -164,6 +191,135 @@ function completeLesson() {
     // Mark as completed via AJAX or form
     alert('Lesson marked as complete! +10 XP earned!');
     location.reload();
+}
+
+// Text-to-Speech functions using Web Speech API
+function speakEnglish() {
+    const text = document.getElementById('english-content').innerText;
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Speech synthesis not supported in your browser');
+    }
+}
+
+function speakDariWeb() {
+    const textElement = document.getElementById('dari-content');
+    if (!textElement) return;
+    
+    const text = textElement.innerText;
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Try Pashto/Dari first, then fallback to Urdu, then English
+        const langs = ['ps-PS', 'ps', 'ur-PK', 'ur', 'en'];
+        utterance.lang = langs[0];
+        utterance.rate = 0.7;
+        utterance.pitch = 0.9;
+        
+        // Set up error handling to try fallback languages
+        utterance.onerror = function(event) {
+            console.log('Dari speech synthesis not available, trying fallback...');
+            // Try Urdu
+            utterance.lang = 'ur';
+            utterance.rate = 0.7;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        };
+        
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Speech synthesis not supported in your browser');
+    }
+}
+
+function playDariAudio() {
+    const audioPlayer = document.getElementById('dari-audio-player');
+    if (audioPlayer && audioPlayer.src) {
+        audioPlayer.play();
+    } else {
+        alert('No audio file available');
+    }
+}
+
+// Stop any ongoing speech
+function stopSpeech() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+// Initialize audio player on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const lessonId = '{{ lesson.id }}';
+    
+    // Try to load Pashto audio file
+    const pashtoPath = `/media/audio/lessons/lesson_${lessonId}_ps.mp3`;
+    const pashtoPlayer = document.getElementById('dari-audio-player');
+    const dariAudioBtn = document.getElementById('dari-audio-btn');
+    
+    fetch(pashtoPath, { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                pashtoPlayer.src = pashtoPath;
+                if (dariAudioBtn) {
+                    dariAudioBtn.style.display = 'flex';
+                }
+                console.log('Pashto audio file loaded successfully');
+            } else {
+                console.log('Pashto audio file not found, checking alternatives...');
+                tryUrduAlternative(lessonId);
+            }
+        })
+        .catch(error => {
+            console.log('Could not find Pashto audio file:', error);
+            tryUrduAlternative(lessonId);
+        });
+    
+    function tryUrduAlternative(lessonId) {
+        // Try Urdu audio as fallback
+        const urduPath = `/media/audio/lessons/lesson_${lessonId}_ps_ur.mp3`;
+        const urduPlayer = document.getElementById('dari-audio-urdu-player');
+        const urduBtn = document.getElementById('dari-audio-ur-btn');
+        
+        fetch(urduPath, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    urduPlayer.src = urduPath;
+                    if (urduBtn) {
+                        urduBtn.style.display = 'flex';
+                    }
+                    console.log('Urdu audio file loaded as fallback');
+                }
+            })
+            .catch(error => {
+                console.log('No audio files found, using Web Speech API only');
+            });
+    }
+});
+
+function playDariAudio() {
+    const audioPlayer = document.getElementById('dari-audio-player');
+    if (audioPlayer && audioPlayer.src) {
+        audioPlayer.play();
+    } else {
+        alert('No Pashto audio file available. Trying alternative methods...');
+        speakDariWeb(); // Fallback to Web Speech
+    }
+}
+
+function playDariAudioUrdu() {
+    const audioPlayer = document.getElementById('dari-audio-urdu-player');
+    if (audioPlayer && audioPlayer.src) {
+        audioPlayer.play();
+    } else {
+        alert('No Urdu audio file available');
+    }
 }
 </script>
 {% endblock %}

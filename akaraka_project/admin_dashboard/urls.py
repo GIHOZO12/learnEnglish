@@ -21,9 +21,12 @@ urlpatterns = [
     path('courses/<int:course_id>/delete/', views.delete_course, name='delete_course'),
     path('courses/<int:course_id>/toggle-publish/', views.toggle_course_publish, name='toggle_course_publish'),
     path('courses/<int:course_id>/lessons/', views.lesson_management, name='lesson_management'),
+    path('courses/<int:course_id>/lessons/create/', views.create_lesson, name='create_lesson'),
     
     # Lesson Management
     path('lessons/<int:lesson_id>/', views.lesson_detail, name='lesson_detail'),
+    path('lessons/<int:lesson_id>/edit/', views.edit_lesson, name='edit_lesson'),
+    path('lessons/<int:lesson_id>/delete/', views.delete_lesson, name='delete_lesson'),
     path('lessons/<int:lesson_id>/add-exercise/', views.add_exercise_to_lesson, name='add_exercise_to_lesson'),
     path('lessons/<int:lesson_id>/remove-exercise/<int:exercise_lesson_id>/', views.remove_exercise_from_lesson, name='remove_exercise_from_lesson'),
     

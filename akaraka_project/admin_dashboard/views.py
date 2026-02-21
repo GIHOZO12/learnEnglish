@@ -673,6 +673,159 @@ def lesson_management(request, course_id):
 
 
 @admin_required
+def create_lesson(request, course_id):
+    """Create a new lesson for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    
+    if request.method == 'POST':
+        try:
+            from django.utils.text import slugify
+            from courses.translation_utils import translate_english_to_dari
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            # Get the highest order number
+            last_lesson = course.lessons.order_by('-order').first()
+            next_order = (last_lesson.order + 1) if last_lesson else 1
+            
+            content_english = request.POST.get('content_english')
+            content_dari = request.POST.get('content_dari', '')
+            
+            # Auto-translate if Dari content not provided
+            if not content_dari or content_dari.strip() == '' and content_english:
+                logger.info(f"Translating content: {content_english[:100]}...")
+                translated = translate_english_to_dari(content_english)
+                logger.info(f"Translation result: {translated[:100] if translated else 'Empty'}...")
+                
+                if translated and translated.strip():
+                    content_dari = translated
+                    messages.success(request, '✓ Dari content auto-translated using Google Translate.')
+                else:
+                    messages.warning(request, '⚠ Could not auto-translate. Please fill Dari content manually or install googletrans: pip install googletrans==4.0.0rc1')
+            
+            # If still empty, use English as fallback
+            if not content_dari or content_dari.strip() == '':
+                content_dari = content_english
+                messages.info(request, 'Using English content as fallback for Dari.')
+            
+            lesson = Lesson(
+                course=course,
+                title=request.POST.get('title'),
+                slug=slugify(request.POST.get('title')),
+                description=request.POST.get('description', ''),
+                content_english=content_english,
+                content_dari=content_dari,
+                estimated_time=request.POST.get('estimated_time', 0),
+                order=next_order,
+                is_published=request.POST.get('is_published') == 'on',
+            )
+            
+            if 'image' in request.FILES:
+                lesson.image = request.FILES['image']
+            
+            lesson.save()
+            
+            # Generate audio files for lesson
+            try:
+                from courses.tts_utils import generate_lesson_audio
+                audio_files = generate_lesson_audio(lesson)
+                if audio_files:
+                    messages.success(request, f'Lesson "{lesson.title}" created with audio pronunciations!')
+                else:
+                    messages.success(request, f'Lesson "{lesson.title}" created! (Audio generation skipped)')
+            except Exception as e:
+                logger.warning(f"Could not generate audio: {str(e)}")
+                messages.success(request, f'Lesson "{lesson.title}" created! (Audio generation failed - install gTTS: pip install gTTS==2.3.2)')
+            
+            return redirect('admin_dashboard:lesson_management', course_id=course.id)
+        except Exception as e:
+            import traceback
+            logger.error(f"Error creating lesson: {str(e)}") 
+            logger.error(traceback.format_exc())
+            messages.error(request, f'Error creating lesson: {str(e)}')
+    
+    context = {'course': course}
+    return render(request, 'admin_dashboard/lesson_form.html', context)
+
+
+@admin_required
+def edit_lesson(request, lesson_id):
+    """Edit an existing lesson"""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    course = lesson.course
+    
+    if request.method == 'POST':
+        try:
+            from courses.translation_utils import translate_english_to_dari
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            content_english = request.POST.get('content_english', lesson.content_english)
+            content_dari = request.POST.get('content_dari', lesson.content_dari)
+            
+            # Auto-translate if English content changed and Dari not provided
+            if content_english != lesson.content_english and not request.POST.get('content_dari'):
+                logger.info(f"Re-translating content: {content_english[:100]}...")
+                translated = translate_english_to_dari(content_english)
+                logger.info(f"Translation result: {translated[:100] if translated else 'Empty'}...")
+                
+                if translated and translated.strip():
+                    content_dari = translated
+                    messages.success(request, '✓ Dari content auto-translated using Google Translate.')
+                else:
+                    messages.warning(request, '⚠ Could not auto-translate Dari content.')
+            
+            # If Dari is empty, use English as fallback
+            if not content_dari or content_dari.strip() == '':
+                content_dari = content_english
+            
+            lesson.title = request.POST.get('title', lesson.title)
+            lesson.description = request.POST.get('description', lesson.description)
+            lesson.content_english = content_english
+            lesson.content_dari = content_dari
+            lesson.estimated_time = request.POST.get('estimated_time', lesson.estimated_time)
+            lesson.is_published = request.POST.get('is_published') == 'on'
+            
+            if 'image' in request.FILES:
+                lesson.image = request.FILES['image']
+            
+            lesson.save()
+            
+            # Regenerate audio files if content changed
+            try:
+                from courses.tts_utils import generate_lesson_audio
+                audio_files = generate_lesson_audio(lesson)
+                if audio_files:
+                    messages.success(request, f'Lesson "{lesson.title}" updated with new audio pronunciations!')
+                else:
+                    messages.success(request, f'Lesson "{lesson.title}" updated! (Audio generation skipped)')
+            except Exception as e:
+                logger.warning(f"Could not regenerate audio: {str(e)}")
+                messages.success(request, f'Lesson "{lesson.title}" updated! (Audio regeneration failed)')
+            
+            return redirect('admin_dashboard:lesson_management', course_id=course.id)
+        except Exception as e:
+            import traceback
+            logger.error(f"Error updating lesson: {str(e)}")
+            logger.error(traceback.format_exc())
+            messages.error(request, f'Error updating lesson: {str(e)}')
+    
+    context = {'lesson': lesson, 'course': course}
+    return render(request, 'admin_dashboard/lesson_form.html', context)
+
+
+@admin_required
+def delete_lesson(request, lesson_id):
+    """Delete a lesson"""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    course_id = lesson.course.id
+    lesson_title = lesson.title
+    lesson.delete()
+    messages.success(request, f'Lesson "{lesson_title}" has been deleted.')
+    return redirect('admin_dashboard:lesson_management', course_id=course_id)
+
+
+@admin_required
 def lesson_detail(request, lesson_id):
     """View and manage exercises for a lesson"""
     lesson = get_object_or_404(Lesson, id=lesson_id)
