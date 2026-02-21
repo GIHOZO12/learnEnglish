@@ -1,0 +1,105 @@
+{% extends "base/base.html" %}
+
+{% block title %}Home - Akaraka{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-primary to-blue-700 text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold mb-4">Learn English with Dari 🌍</h1>
+        <p class="text-xl text-blue-100 mb-8">Join thousands of learners mastering English through interactive lessons, exercises, and community support.</p>
+        <div class="flex justify-center space-x-4">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'users:register' %}" class="bg-secondary hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-lg">Start Learning Free</a>
+                <a href="{% url 'users:login' %}" class="bg-white hover:bg-gray-100 text-primary font-bold py-3 px-8 rounded-lg">Login</a>
+            {% else %}
+                <a href="{% url 'courses:dashboard' %}" class="bg-secondary hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-lg">Go to Dashboard</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Features -->
+<div class="max-w-7xl mx-auto px-4 py-16">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Why Choose Akaraka?</h2>
+        <p class="text-xl text-gray-600">Everything you need to become fluent in English</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">🎮</div>
+            <h3 class="text-2xl font-bold mb-2">Gamified Learning</h3>
+            <p class="text-gray-600">Earn XP, streaks, and badges. Track your progress and compete with friends on the leaderboard.</p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">🎵</div>
+            <h3 class="text-2xl font-bold mb-2">Audio & Pronunciation</h3>
+            <p class="text-gray-600">Listen to native speakers. Practice pronunciation with interactive audio exercises.</p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">📚</div>
+            <h3 class="text-2xl font-bold mb-2">Structured Curriculum</h3>
+            <p class="text-gray-600">Beginner to Advanced. Real-life English. Expert-designed courses from British Council standards.</p>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">👥</div>
+            <h3 class="text-2xl font-bold mb-2">Community Support</h3>
+            <p class="text-gray-600">Connect with learners, share resources, and learn together in our vibrant community.</p>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">🎓</div>
+            <h3 class="text-2xl font-bold mb-2">Certificates</h3>
+            <p class="text-gray-600">Earn verified certificates upon course completion. Showcase your English skills.</p>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <div class="text-4xl mb-4">📱</div>
+            <h3 class="text-2xl font-bold mb-2">Low Bandwidth</h3>
+            <p class="text-gray-600">Works perfectly on slow connections. Learn anywhere, anytime with optimized content.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="bg-gray-100 py-16">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+            <div>
+                <div class="text-4xl font-bold text-primary">{{ total_users }}</div>
+                <p class="text-gray-600 mt-2">Active Learners</p>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-primary">100+</div>
+                <p class="text-gray-600 mt-2">Lessons</p>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-primary">500+</div>
+                <p class="text-gray-600 mt-2">Exercises</p>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-primary">24/7</div>
+                <p class="text-gray-600 mt-2">Available</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="bg-primary text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <h2 class="text-4xl font-bold mb-4">Ready to Master English?</h2>
+        <p class="text-xl text-blue-100 mb-8">Join thousands of Dari speakers learning English today.</p>
+        <a href="{% url 'users:register' %}" class="bg-secondary hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-lg">Start Free Trial</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+
+{% block title %}Badges & Achievements - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">Badges & Achievements</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for badge in badges %}
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center {% if badge.id in earned_badge_ids %}border-2 border-success{% endif %}">
+                <div class="w-20 h-20 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center text-4xl">
+                    🏆
+                </div>
+                <h3 class="font-bold text-lg mb-2">{{ badge.name }}</h3>
+                <p class="text-gray-600 text-sm mb-4">{{ badge.description }}</p>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{ badge.get_badge_type_display }}</span>
+                    <span class="text-yellow-500 font-bold">+{{ badge.xp_reward }} XP</span>
+                </div>
+                {% if badge.id in earned_badge_ids %}
+                    <div class="mt-4 text-green-600 font-bold">✓ Earned</div>
+                {% else %}
+                    <div class="mt-4 text-gray-500 text-sm">Locked</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

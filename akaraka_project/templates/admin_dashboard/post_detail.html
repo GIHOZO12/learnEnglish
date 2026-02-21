@@ -1,0 +1,72 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}{{ post.title }} - Admin Dashboard{% endblock %}
+{% block page_title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Back Button -->
+    <a href="{% url 'admin_dashboard:community_management' %}" class="inline-block px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition">← Back to Community</a>
+    
+    <!-- Post Detail -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-8">
+        <div class="mb-6">
+            <h2 class="text-gray-500 text-sm mb-4">{{ post.author.username }} • {{ post.created_at|date:"F d, Y H:i" }}</h2>
+            <p class="text-gray-900 text-xl leading-relaxed font-medium">{{ post.content }}</p>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6 space-y-3 mb-6 border border-gray-200">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Type</p>
+                    <p class="text-gray-900 font-semibold mt-1">{{ post.get_post_type_display }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Views</p>
+                    <p class="text-gray-900 font-semibold mt-1">{{ post.views_count }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Likes</p>
+                    <p class="text-gray-900 font-semibold mt-1">{{ post.get_like_count }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Status</p>
+                    <p class="text-gray-900 font-semibold mt-1">
+                        <span class="px-2 py-1 rounded text-xs {% if post.is_published %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {% if post.is_published %}Published{% else %}Draft{% endif %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-2">
+            <a href="{% url 'admin_dashboard:delete_post' post.id %}" class="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition" onclick="return confirm('Are you sure?')">Delete Post</a>
+        </div>
+    </div>
+    
+    <!-- Comments -->
+    {% if comments %}
+    <div class="bg-white rounded-lg shadow border border-gray-200">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">Comments ({{ comments.count }})</h3>
+        </div>
+        <div class="p-8 space-y-4">
+            {% for comment in comments %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex justify-between mb-3">
+                    <h4 class="font-semibold text-gray-900">{{ comment.author.username }}</h4>
+                    <span class="text-gray-600 text-sm">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <p class="text-gray-700">{{ comment.content }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-8 text-center text-gray-500">
+        No comments on this post
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

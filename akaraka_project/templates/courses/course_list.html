@@ -1,0 +1,107 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Browse Courses - Akaraka{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-blue-900 mb-4">📚 Explore Courses</h1>
+        <p class="text-gray-600">Choose from our comprehensive English learning courses</p>
+    </div>
+
+    <!-- Filter by Level -->
+    <div class="mb-8 flex gap-4 flex-wrap">
+        <a href="{% url 'courses:course_list' %}" class="px-4 py-2 rounded-lg {% if not level %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            All Levels
+        </a>
+        <a href="?level=beginner" class="px-4 py-2 rounded-lg {% if level == 'beginner' %}bg-green-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Beginner
+        </a>
+        <a href="?level=intermediate" class="px-4 py-2 rounded-lg {% if level == 'intermediate' %}bg-yellow-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Intermediate
+        </a>
+        <a href="?level=advanced" class="px-4 py-2 rounded-lg {% if level == 'advanced' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Advanced
+        </a>
+    </div>
+
+    <!-- Courses Grid -->
+    {% if courses %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for course in courses %}
+        <a href="{% url 'courses:course_detail' course.slug %}" class="block">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                    <span class="text-white text-5xl">📖</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-bold text-gray-800">{{ course.title }}</h3>
+                        {% if course.is_published %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Live</span>
+                        {% else %}
+                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">Draft</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-gray-600 text-sm mb-4">{{ course.description|truncatewords:20 }}</p>
+                    
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="text-sm font-semibold">
+                            {% if course.current_level == 'beginner' %}
+                            🟢 Beginner
+                            {% elif course.current_level == 'intermediate' %}
+                            🟡 Intermediate
+                            {% else %}
+                            🔴 Advanced
+                            {% endif %}
+                        </span>
+                        <span class="text-sm text-gray-500">{{ course.lessons_count }} lessons</span>
+                    </div>
+                    
+                    {% if course.price > 0 %}
+                    <div class="text-blue-600 font-bold text-lg">${{ course.price }}</div>
+                    {% else %}
+                    <div class="text-green-600 font-bold text-lg">Free</div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if level %}&level={{ level }}{% endif %}" class="px-3 py-2 bg-blue-600 text-white rounded">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if level %}&level={{ level }}{% endif %}" class="px-3 py-2 bg-blue-600 text-white rounded">Previous</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="px-3 py-2 bg-blue-600 text-white rounded">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}{% if level %}&level={{ level }}{% endif %}" class="px-3 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if level %}&level={{ level }}{% endif %}" class="px-3 py-2 bg-blue-600 text-white rounded">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if level %}&level={{ level }}{% endif %}" class="px-3 py-2 bg-blue-600 text-white rounded">Last</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-12">
+        <p class="text-gray-600 text-lg">No courses available yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

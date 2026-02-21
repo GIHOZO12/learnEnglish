@@ -1,0 +1,87 @@
+{% extends "base/base.html" %}
+
+{% block title %}Leaderboard - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-2">Global Leaderboard</h1>
+    <p class="text-gray-600 mb-8">Top learners by experience points</p>
+    
+    {% if user.is_authenticated %}
+        <div class="bg-primary text-white rounded-lg p-6 mb-8">
+            <div class="grid grid-cols-4 gap-4">
+                <div>
+                    <p class="text-sm opacity-75">Your Rank</p>
+                    <p class="text-3xl font-bold">#{{ user_rank }}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">Your XP</p>
+                    <p class="text-3xl font-bold">{{ user.total_xp }}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">Your Level</p>
+                    <p class="text-3xl font-bold">{{ user.get_current_level_display }}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">Streak</p>
+                    <p class="text-3xl font-bold">{{ user.current_streak }} 🔥</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Leaderboard Table -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-100 border-b">
+                <tr>
+                    <th class="px-6 py-4 text-left">Rank</th>
+                    <th class="px-6 py-4 text-left">User</th>
+                    <th class="px-6 py-4 text-right">XP</th>
+                    <th class="px-6 py-4 text-right">Streak</th>
+                    <th class="px-6 py-4 text-right">Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_obj in users %}
+                    <tr class="border-b hover:bg-gray-50 {% if user.is_authenticated and user_obj.id == user.id %}bg-blue-50{% endif %}">
+                        <td class="px-6 py-4 font-bold text-xl">
+                            {% if forloop.counter == 1 %}🥇
+                            {% elif forloop.counter == 2 %}🥈
+                            {% elif forloop.counter == 3 %}🥉
+                            {% else %}#{{ forloop.counter }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'users:profile' user_obj.username %}" class="text-primary hover:underline font-semibold">
+                                {{ user_obj.get_full_name }}
+                            </a>
+                            <p class="text-sm text-gray-600">@{{ user_obj.username }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold">{{ user_obj.total_xp }}</td>
+                        <td class="px-6 py-4 text-right">{{ user_obj.current_streak }} 🔥</td>
+                        <td class="px-6 py-4 text-right">{{ user_obj.get_current_level_display }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="flex justify-center mt-8 space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="px-4 py-2 border rounded hover:bg-gray-100">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border rounded hover:bg-gray-100">‹ Previous</a>
+            {% endif %}
+            
+            <span class="px-4 py-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border rounded hover:bg-gray-100">Next ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 border rounded hover:bg-gray-100">Last »</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

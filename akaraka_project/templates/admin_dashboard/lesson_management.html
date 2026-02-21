@@ -1,0 +1,65 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}Lessons for {{ course.title }} - Admin Dashboard{% endblock %}
+{% block page_title %}Lessons: {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Course Header -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ course.title }}</h3>
+                <p class="text-gray-600 mt-1">{{ course.lessons.count }} lessons</p>
+            </div>
+            <a href="{% url 'admin_dashboard:course_detail' course.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">Back to Course</a>
+        </div>
+    </div>
+
+    <!-- Lessons List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-xl font-bold text-gray-900">All Lessons</h3>
+        </div>
+        
+        {% if lessons %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Title</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Time</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Exercises</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in lessons %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4">{{ lesson.order }}</td>
+                        <td class="px-6 py-4 font-medium">{{ lesson.title }}</td>
+                        <td class="px-6 py-4">{{ lesson.estimated_time }} min</td>
+                        <td class="px-6 py-4">{{ lesson.exercises.count }} exercises</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded {% if lesson.is_published %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if lesson.is_published %}Published{% else %}Draft{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'admin_dashboard:lesson_detail' lesson.id %}" class="text-blue-600 hover:text-blue-800 font-semibold">Manage</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-8 py-6 text-center text-gray-500">
+            No lessons found in this course.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

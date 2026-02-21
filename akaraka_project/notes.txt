@@ -1,0 +1,5 @@
+"""
+Helper file to complete missing view imports
+"""
+
+# Run this to add missing URLs patterns for exercise types

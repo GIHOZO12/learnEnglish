@@ -1,0 +1,237 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ profile_user.username }} - Profile - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center space-x-6">
+                {% if profile_user.profile_picture %}
+                    <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.username }}" class="w-24 h-24 rounded-full object-cover border-4 border-primary">
+                {% else %}
+                    <div class="w-24 h-24 rounded-full bg-primary text-white flex items-center justify-center text-4xl">
+                        {{ profile_user.username|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-900">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+                    <p class="text-gray-600">@{{ profile_user.username }}</p>
+                    <p class="text-sm text-gray-500 mt-2">Member since {{ profile_user.date_joined|date:"B Y" }}</p>
+                </div>
+            </div>
+            
+            {% if is_own_profile %}
+            <a href="{% url 'users:profile_edit' profile_user.username %}" class="bg-primary hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                Edit Profile
+            </a>
+            {% endif %}
+        </div>
+        
+        {% if profile_user.bio %}
+        <div class="text-gray-700 text-lg mb-6 p-4 bg-gray-50 rounded-lg">
+            {{ profile_user.bio }}
+        </div>
+        {% endif %}
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t">
+            <div class="text-center">
+                <p class="text-3xl font-bold text-primary">{{ profile_user.total_xp }}</p>
+                <p class="text-gray-600 text-sm">Total XP</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold text-purple-600">{{ profile_user.current_streak }}</p>
+                <p class="text-gray-600 text-sm">Current Streak 🔥</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold text-green-600">{{ profile_user.get_learning_progress }}%</p>
+                <p class="text-gray-600 text-sm">Learning Progress</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold text-blue-600">{{ profile_user.get_current_level_display }}</p>
+                <p class="text-gray-600 text-sm">Current Level</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Tabs -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 p-6">
+            <div class="flex space-x-8">
+                <button class="tab-btn active text-primary font-semibold border-b-2 border-primary pb-2" data-tab="progress">
+                    📊 My Learning Progress
+                </button>
+                <button class="tab-btn text-gray-600 hover:text-primary font-semibold pb-2" data-tab="courses">
+                    📚 My Courses
+                </button>
+                <button class="tab-btn text-gray-600 hover:text-primary font-semibold pb-2" data-tab="achievements">
+                    🏆 Achievements
+                </button>
+            </div>
+        </div>
+        
+        <!-- Progress Tab -->
+        <div id="progress-tab" class="tab-content p-8">
+            {% if is_own_profile %}
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Learning Journey</h2>
+                
+                <!-- Overall Progress -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">Overall Progress</h3>
+                        <span class="text-4xl font-bold text-primary">{{ profile_user.get_learning_progress }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="bg-gradient-to-r from-blue-500 to-primary h-4 rounded-full transition-all duration-500" style="width: {{ profile_user.get_learning_progress }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- View Full Progress Button -->
+                <a href="{% url 'courses:my_progress' %}" class="inline-flex items-center space-x-2 bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                    <span>📊</span>
+                    <span>View Detailed Progress</span>
+                </a>
+            </div>
+            
+            <!-- Recent Courses -->
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Recent Courses</h3>
+                {% if courses %}
+                <div class="space-y-4">
+                    {% for enrollment in courses|slice:":3" %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ enrollment.course.title }}</p>
+                            <p class="text-sm text-gray-600">{{ enrollment.progress_percentage }}% complete</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-32 bg-gray-200 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: {{ enrollment.progress_percentage }}%"></div>
+                            </div>
+                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="text-primary hover:text-blue-700 font-semibold">Continue →</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-600">No courses enrolled yet. <a href="{% url 'courses:course_list' %}" class="text-primary hover:underline">Browse courses</a></p>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <p class="text-gray-600 text-lg">{{ profile_user.username }}'s learning progress is private.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Courses Tab -->
+        <div id="courses-tab" class="tab-content p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Courses</h2>
+            
+            {% if is_own_profile and courses %}
+            <div class="space-y-4">
+                {% for enrollment in courses %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-900">{{ enrollment.course.title }}</h3>
+                            <p class="text-sm text-gray-600">{{ enrollment.course.get_level_display }} • {{ enrollment.course.lessons.count }} lessons</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-primary">{{ enrollment.progress_percentage }}%</p>
+                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="text-primary hover:underline text-sm">Continue →</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% elif not is_own_profile %}
+            <p class="text-gray-600">Course information is private.</p>
+            {% else %}
+            <p class="text-gray-600">No courses enrolled yet. <a href="{% url 'courses:course_list' %}" class="text-primary hover:underline">Browse courses</a></p>
+            {% endif %}
+        </div>
+        
+        <!-- Achievements Tab -->
+        <div id="achievements-tab" class="tab-content p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Achievements</h2>
+            
+            {% if is_own_profile %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Certificates -->
+                <div class="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-4xl">🏆</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Certificates</h3>
+                            <p class="text-2xl font-bold text-yellow-600">{{ profile_user.certificates.count }}</p>
+                        </div>
+                    </div>
+                    {% if profile_user.certificates.count > 0 %}
+                    <div class="space-y-2">
+                        {% for cert in profile_user.certificates.all|slice:":3" %}
+                        <div class="text-sm text-gray-700">
+                            ✓ {{ cert.course.title }} - {{ cert.issue_date|date:"M Y" }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Badges -->
+                <div class="bg-purple-50 rounded-lg p-6 border border-purple-200">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-4xl">🎖️</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Badges</h3>
+                            <p class="text-2xl font-bold text-purple-600">{{ profile_user.earned_badges.count }}</p>
+                        </div>
+                    </div>
+                    {% if profile_user.earned_badges.count > 0 %}
+                    <div class="flex flex-wrap gap-2">
+                        {% for badge in profile_user.earned_badges.all|slice:":5" %}
+                        <span class="inline-block px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm font-semibold">
+                            {{ badge.badge.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-600">Achievements are private.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active state from all buttons
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                b.classList.add('text-gray-600');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            
+            // Add active state to clicked button
+            this.classList.remove('text-gray-600');
+            this.classList.add('text-primary', 'border-b-2', 'border-primary');
+        });
+    });
+</script>
+{% endblock %}

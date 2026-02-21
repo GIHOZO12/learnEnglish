@@ -1,0 +1,107 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}Subscription Management - Admin Dashboard{% endblock %}
+{% block page_title %}Subscription Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Active Subscriptions</div>
+            <div class="text-4xl font-bold mt-2 text-gray-900">{{ active_count }}</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Cancelled Subscriptions</div>
+            <div class="text-4xl font-bold mt-2 text-gray-900">{{ cancelled_count }}</div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <form method="GET" class="space-y-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Filter Subscriptions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                    <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Subscriptions</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Subscriptions Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">All Subscriptions</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">User</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Subscription Plan</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Start Date</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">End Date</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Auto Renew</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscriptions %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            <a href="{% url 'admin_dashboard:user_detail' sub.user.id %}" class="text-blue-600 hover:text-blue-800">{{ sub.user.username }}</a>
+                        </td>
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ sub.subscription.get_name_display }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if sub.status == 'active' %}bg-green-100 text-green-800{% elif sub.status == 'cancelled' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ sub.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">{{ sub.start_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">{{ sub.end_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded text-xs font-medium {% if sub.auto_renew %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if sub.auto_renew %}Yes{% else %}No{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No subscriptions found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if subscriptions.has_other_pages %}
+    <div class="flex justify-center gap-2">
+        {% if subscriptions.has_previous %}
+            <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">First</a>
+            <a href="?page={{ subscriptions.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Previous</a>
+        {% endif %}
+        
+        <span class="px-4 py-2 text-gray-700 font-medium">Page {{ subscriptions.number }} of {{ subscriptions.paginator.num_pages }}</span>
+        
+        {% if subscriptions.has_next %}
+            <a href="?page={{ subscriptions.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Next</a>
+            <a href="?page={{ subscriptions.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Last</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

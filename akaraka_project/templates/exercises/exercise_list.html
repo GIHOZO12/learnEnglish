@@ -1,0 +1,140 @@
+{% extends "base/base.html" %}
+
+{% block title %}Exercises & Quizzes - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-12">
+        <h1 class="text-4xl font-bold text-blue-900 mb-4">📝 Exercises & Quizzes</h1>
+        <p class="text-gray-600 text-lg">Practice what you've learned and earn XP!</p>
+    </div>
+
+    <!-- Filter by Type -->
+    <div class="mb-8 flex gap-4 flex-wrap">
+        <a href="{% url 'exercises:exercise_list' %}" class="px-4 py-2 rounded-lg {% if not exercise_type %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            All Exercises
+        </a>
+        <a href="?type=mcq" class="px-4 py-2 rounded-lg {% if exercise_type == 'mcq' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Multiple Choice
+        </a>
+        <a href="?type=matching" class="px-4 py-2 rounded-lg {% if exercise_type == 'matching' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Matching
+        </a>
+        <a href="?type=typing" class="px-4 py-2 rounded-lg {% if exercise_type == 'typing' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Typing
+        </a>
+        <a href="?type=listening" class="px-4 py-2 rounded-lg {% if exercise_type == 'listening' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %}">
+            Listening
+        </a>
+    </div>
+
+    <!-- Exercises Grid -->
+    {% if exercises %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for exercise in exercises %}
+        <a href="{% url 'exercises:mcq_exercise' exercise.id 0 %}" class="block">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow h-full">
+                <!-- Header Color by Type -->
+                {% if exercise.exercise_type == 'mcq' %}
+                <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-24 flex items-center justify-center">
+                    <span class="text-white text-5xl">🔘</span>
+                </div>
+                {% elif exercise.exercise_type == 'matching' %}
+                <div class="bg-gradient-to-r from-purple-400 to-purple-600 h-24 flex items-center justify-center">
+                    <span class="text-white text-5xl">🔗</span>
+                </div>
+                {% elif exercise.exercise_type == 'typing' %}
+                <div class="bg-gradient-to-r from-green-400 to-green-600 h-24 flex items-center justify-center">
+                    <span class="text-white text-5xl">⌨️</span>
+                </div>
+                {% elif exercise.exercise_type == 'listening' %}
+                <div class="bg-gradient-to-r from-yellow-400 to-yellow-600 h-24 flex items-center justify-center">
+                    <span class="text-white text-5xl">🔊</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <div class="mb-2">
+                        {% if exercise.exercise_type == 'mcq' %}
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Multiple Choice</span>
+                        {% elif exercise.exercise_type == 'matching' %}
+                        <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Matching</span>
+                        {% elif exercise.exercise_type == 'typing' %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Typing</span>
+                        {% elif exercise.exercise_type == 'listening' %}
+                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Listening</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ exercise.title }}</h3>
+                    <p class="text-gray-600 text-sm mb-4">{{ exercise.description|truncatewords:20 }}</p>
+                    
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            {% if exercise.difficulty == 'easy' %}
+                            <span class="text-sm font-semibold text-green-600">🟢 Easy</span>
+                            {% elif exercise.difficulty == 'medium' %}
+                            <span class="text-sm font-semibold text-yellow-600">🟡 Medium</span>
+                            {% elif exercise.difficulty == 'hard' %}
+                            <span class="text-sm font-semibold text-red-600">🔴 Hard</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-blue-600 font-bold">+{{ exercise.xp_reward }} XP</div>
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                    <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Start Exercise
+                    </button>
+                    {% else %}
+                    <a href="{% url 'users:login' %}" class="block text-center bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Login to Start
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <p class="text-gray-600 text-lg">No exercises available yet.</p>
+        <a href="{% url 'courses:course_list' %}" class="text-blue-600 hover:underline mt-2">Browse courses to find exercises</a>
+    </div>
+    {% endif %}
+
+    <!-- Learning Path Info -->
+    <div class="bg-blue-50 rounded-lg p-8 border-l-4 border-blue-600">
+        <h2 class="text-2xl font-bold mb-4">How to Use Exercises</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div>
+                <div class="text-3xl mb-2">📖</div>
+                <h3 class="font-bold mb-2">1. Study Lessons</h3>
+                <p class="text-sm text-gray-700">Learn vocabulary and content from courses</p>
+            </div>
+            <div>
+                <div class="text-3xl mb-2">✍️</div>
+                <h3 class="font-bold mb-2">2. Take Exercises</h3>
+                <p class="text-sm text-gray-700">Practice what you've learned with exercises</p>
+            </div>
+            <div>
+                <div class="text-3xl mb-2">⭐</div>
+                <h3 class="font-bold mb-2">3. Earn XP</h3>
+                <p class="text-sm text-gray-700">Get XP based on your performance (80%+ = full XP)</p>
+            </div>
+            <div>
+                <div class="text-3xl mb-2">🏆</div>
+                <h3 class="font-bold mb-2">4. Unlock Badges</h3>
+                <p class="text-sm text-gray-700">Reach milestones and earn badges & achievements</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+</style>
+{% endblock %}

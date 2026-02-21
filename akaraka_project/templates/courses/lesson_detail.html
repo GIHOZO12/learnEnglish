@@ -1,0 +1,169 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ lesson.title }} - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Lesson Header -->
+    <div class="mb-8">
+        <a href="{% url 'courses:course_detail' course.slug %}" class="text-primary hover:underline mb-4 inline-block">← Back to {{ course.title }}</a>
+        <h1 class="text-4xl font-bold mb-2">{{ lesson.title }}</h1>
+        <p class="text-gray-600">Lesson {{ progress.attempts|add:1 }} • ⏱️ {{ lesson.estimated_time }} minutes</p>
+    </div>
+    
+    <!-- Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+            <!-- Dari Toggle -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" id="dari-toggle" {% if show_dari %}checked{% endif %} onchange="toggleDari()">
+                    <span class="font-semibold">Show Dari Translation</span>
+                </label>
+            </div>
+            
+            <!-- English Content -->
+            <div class="bg-white p-8 rounded-lg shadow mb-8">
+                <h2 class="text-2xl font-bold mb-4">English Content</h2>
+                <div class="prose max-w-none">
+                    {{ lesson.content_english|safe }}
+                </div>
+            </div>
+            
+            <!-- Audio Player -->
+            {% if lesson.audio_file %}
+            <div class="bg-blue-50 p-6 rounded-lg shadow mb-8 border-l-4 border-blue-600">
+                <h3 class="text-lg font-bold mb-3">🔊 Lesson Audio</h3>
+                <audio controls class="w-full">
+                    <source src="{{ lesson.audio_file.url }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+            {% endif %}
+            
+            <!-- Dari Content -->
+            {% if show_dari %}
+                <div class="bg-blue-50 p-8 rounded-lg shadow mb-8 border-l-4 border-primary">
+                    <h2 class="text-2xl font-bold mb-4 text-primary">Dari Translation</h2>
+                    <div class="prose max-w-none">
+                        {{ lesson.content_dari|safe }}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Vocabulary -->
+            {% if vocabulary %}
+                <div class="bg-white p-8 rounded-lg shadow mb-8">
+                    <h2 class="text-2xl font-bold mb-4">Vocabulary</h2>
+                    <div class="space-y-4">
+                        {% for word in vocabulary %}
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 class="font-bold text-lg">{{ word.english_word }}</h3>
+                                        <p class="text-gray-600">{{ word.dari_word }}</p>
+                                        {% if word.pronunciation %}
+                                            <p class="text-sm text-gray-500 italic">/{{ word.pronunciation }}/</p>
+                                        {% endif %}
+                                    </div>
+                                    {% if word.audio %}
+                                        <button onclick="playAudio('{{ word.audio.url }}')" class="text-2xl hover:text-primary">🔊</button>
+                                    {% endif %}
+                                </div>
+                                {% if word.example_english %}
+                                    <p class="text-gray-700"><strong>Example:</strong> {{ word.example_english }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Exercises -->
+            {% if exercises %}
+                <div class="bg-white p-8 rounded-lg shadow">
+                    <h2 class="text-2xl font-bold mb-4">📝 Exercises</h2>
+                    <div class="space-y-3">
+                        {% for exercise_link in exercises %}
+                            {% if exercise_link.exercise.exercise_type == 'mcq' %}
+                                <a href="{% url 'exercises:mcq_exercise' exercise_link.exercise.id lesson.id %}" class="block bg-gradient-to-r from-blue-400 to-blue-600 text-white p-6 rounded-lg hover:shadow-lg transition">
+                            {% elif exercise_link.exercise.exercise_type == 'matching' %}
+                                <a href="{% url 'exercises:matching' exercise_link.exercise.id lesson.id %}" class="block bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-lg hover:shadow-lg transition">
+                            {% elif exercise_link.exercise.exercise_type == 'typing' %}
+                                <a href="{% url 'exercises:typing' exercise_link.exercise.id lesson.id %}" class="block bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg hover:shadow-lg transition">
+                            {% elif exercise_link.exercise.exercise_type == 'listening' %}
+                                <a href="{% url 'exercises:listening' exercise_link.exercise.id lesson.id %}" class="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-6 rounded-lg hover:shadow-lg transition">
+                            {% endif %}
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-bold text-lg">{{ exercise_link.exercise.title }}</h3>
+                                        <p class="text-white text-sm opacity-90">{{ exercise_link.exercise.get_exercise_type_display }} • {{ exercise_link.exercise.xp_reward }} XP</p>
+                                    </div>
+                                    <div class="text-2xl">
+                                        {% if exercise_link.exercise.exercise_type == 'mcq' %}🔘
+                                        {% elif exercise_link.exercise.exercise_type == 'matching' %}🔗
+                                        {% elif exercise_link.exercise.exercise_type == 'typing' %}⌨️
+                                        {% elif exercise_link.exercise.exercise_type == 'listening' %}🔊
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div>
+            <!-- Lesson Progress -->
+            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24 mb-6">
+                <h3 class="font-bold text-lg mb-4">Lesson Progress</h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-gray-600 text-sm">Attempts</p>
+                        <p class="text-2xl font-bold">{{ progress.attempts }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">XP Earned</p>
+                        <p class="text-2xl font-bold text-primary">{{ progress.xp_earned }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Status</p>
+                        <p class="font-bold">{% if progress.is_completed %}✓ Completed{% else %}In Progress{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Complete Lesson -->
+            {% if not progress.is_completed %}
+                <button onclick="completeLesson()" class="w-full bg-success text-white px-6 py-3 rounded-lg hover:bg-green-600 font-bold">
+                    Complete Lesson
+                </button>
+            {% else %}
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                    ✓ Lesson completed!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDari() {
+    const checked = document.getElementById('dari-toggle').checked;
+    window.location.href = window.location.pathname + '?dari=' + (checked ? 'true' : 'false');
+}
+
+function playAudio(url) {
+    const audio = new Audio(url);
+    audio.play();
+}
+
+function completeLesson() {
+    // Mark as completed via AJAX or form
+    alert('Lesson marked as complete! +10 XP earned!');
+    location.reload();
+}
+</script>
+{% endblock %}

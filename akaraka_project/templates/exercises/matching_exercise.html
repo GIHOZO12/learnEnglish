@@ -1,0 +1,155 @@
+{% extends "base/base.html" %}
+
+{% block title %}Matching Exercise - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{% url 'courses:lesson_detail' course.slug lesson.slug %}" class="text-primary hover:underline mb-4 inline-block">← Back to Lesson</a>
+        <h1 class="text-4xl font-bold mb-2">🔗 Matching Exercise</h1>
+        <p class="text-gray-600">{{ exercise.title }}</p>
+    </div>
+
+    <!-- Exercise Card -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div class="mb-6 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-600">
+            <p class="text-lg font-semibold text-gray-800">{{ exercise.description }}</p>
+        </div>
+
+        <!-- Matching Pairs -->
+        {% if matching_pairs %}
+        <form id="matching-form" method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-4">Match These:</h3>
+                    <div class="space-y-3">
+                        {% for pair in matching_pairs %}
+                        <div class="p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                            <p class="font-semibold text-gray-800">{{ pair.left_text }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Right Column (Draggable) -->
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-4">To These:</h3>
+                    <div class="space-y-3" id="right-column">
+                        {% for pair in matching_pairs %}
+                        <div 
+                            class="p-4 bg-purple-50 rounded-lg border-2 border-purple-200 cursor-move draggable"
+                            draggable="true"
+                            data-id="{{ pair.id }}"
+                        >
+                            <p class="font-semibold text-gray-800">{{ pair.right_text }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button type="submit" class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-purple-700 transition text-lg">
+                    Submit Matches
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <p class="text-center text-gray-600">No matching pairs available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Help Section -->
+    <div class="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
+        <h3 class="font-bold text-blue-900 mb-2">💡 Matching Exercise Tips:</h3>
+        <ul class="text-sm text-gray-700 space-y-1">
+            <li>✓ Match items from the left to the right</li>
+            <li>✓ Each pair has exactly one correct match</li>
+            <li>✓ Try to think about word meanings and relationships</li>
+            <li>✓ Correct matches earn XP</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+let draggedElement = null;
+
+document.querySelectorAll('[draggable="true"]').forEach(element => {
+    element.addEventListener('dragstart', function(e) {
+        draggedElement = this;
+        this.style.opacity = '0.5';
+    });
+    
+    element.addEventListener('dragend', function(e) {
+        this.style.opacity = '1';
+    });
+});
+
+document.getElementById('right-column').addEventListener('dragover', function(e) {
+    e.preventDefault();
+});
+
+document.getElementById('right-column').addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (draggedElement) {
+        // Reorder items on drop (simple reordering)
+        const afterElement = getDragAfterElement(this, e.clientY);
+        if (afterElement == null) {
+            this.appendChild(draggedElement);
+        } else {
+            this.insertBefore(draggedElement, afterElement);
+        }
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('[draggable="true"]')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+document.getElementById('matching-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get matched order
+    const matches = Array.from(document.querySelectorAll('[draggable="true"]')).map(el => el.dataset.id);
+    
+    const formData = new FormData(this);
+    formData.append('matches', JSON.stringify(matches));
+    
+    fetch('{{ request.path }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Great job! You earned ${data.xp_earned} XP!\n\nScore: ${data.score}%`);
+            setTimeout(() => {
+                window.location.href = '{% url 'courses:lesson_detail' course.slug lesson.slug %}';
+            }, 1000);
+        } else {
+            alert('Error submitting exercise. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting exercise.');
+    });
+});
+</script>
+{% endblock %}

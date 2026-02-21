@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+
+{% block title %}MCQ Exercise - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2">{{ exercise.title }}</h1>
+    <p class="text-gray-600 mb-8">Answer {{ questions.count }} questions to earn {{ exercise.xp_reward }} XP</p>
+    
+    <form method="post" id="exercise-form" class="bg-white rounded-lg shadow-lg p-8">
+        {% csrf_token %}
+        
+        <div class="space-y-8">
+            {% for question in questions %}
+                <div class="pb-8 border-b">
+                    <h3 class="text-xl font-bold mb-4">{{ forloop.counter }}. {{ question.question_english }}</h3>
+                    
+                    {% if question.audio %}
+                        <button type="button" onclick="playAudio('{{ question.audio.url }}')" class="mb-4 text-primary hover:text-blue-700 font-semibold">
+                            🔊 Listen
+                        </button>
+                    {% endif %}
+                    
+                    <div class="space-y-3">
+                        {% for option in question.options.all %}
+                            <label class="block border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="responses[{{ question.id }}]" value="{{ option.id }}" class="mr-3" required>
+                                <span class="font-semibold">{{ option.text_english }}</span>
+                                <p class="text-gray-600 text-sm mt-1">{{ option.text_dari }}</p>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <button type="submit" class="mt-8 bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-bold w-full">
+            Submit Answers
+        </button>
+    </form>
+</div>
+
+<script>
+function playAudio(url) {
+    const audio = new Audio(url);
+    audio.play();
+}
+
+document.getElementById('exercise-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const responses = {};
+    
+    // Parse form data
+    for (let [key, value] of formData.entries()) {
+        if (key.startsWith('responses[')) {
+            const qId = key.match(/\d+/)[0];
+            responses[qId] = value;
+        }
+    }
+    
+    const response = await fetch(this.action, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify({responses})
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+        alert(`Score: ${result.score}%\nXP Earned: ${result.xp_earned}`);
+        setTimeout(() => location.reload(), 1000);
+    }
+});
+</script>
+{% endblock %}

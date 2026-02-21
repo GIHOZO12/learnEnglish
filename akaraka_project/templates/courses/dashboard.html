@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+
+{% block title %}Dashboard - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-primary to-blue-700 text-white rounded-lg p-8 mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-bold mb-2">Welcome back, {{ user.first_name }}! 👋</h1>
+                <p class="text-blue-100">You're {{ user.current_level }} level. Keep up the great work!</p>
+            </div>
+            <div class="text-right">
+                <div class="text-5xl font-bold">{{ total_xp }}</div>
+                <p class="text-blue-100">Total XP</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="text-sm text-gray-600 mb-2">Current Streak</div>
+            <div class="text-3xl font-bold text-primary">{{ current_streak }} 🔥</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="text-sm text-gray-600 mb-2">Longest Streak</div>
+            <div class="text-3xl font-bold text-success">{{ longest_streak }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="text-sm text-gray-600 mb-2">Level</div>
+            <div class="text-3xl font-bold text-secondary">{{ user.get_current_level_display }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="text-sm text-gray-600 mb-2">Subscription</div>
+            <div class="text-xl font-bold {% if user.subscription_tier == 'free' %}text-gray-600{% else %}text-primary{% endif %}">
+                {{ user.get_subscription_tier_display }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Your Courses -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-3xl font-bold">Your Courses</h2>
+            <a href="{% url 'courses:my_courses' %}" class="text-primary hover:underline">View All</a>
+        </div>
+        
+        {% if enrollments %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for enrollment in enrollments %}
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+                        <div class="bg-gradient-to-r from-primary to-blue-600 h-32"></div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">{{ enrollment.course.title }}</h3>
+                            <p class="text-sm text-gray-600 mb-4">{{ enrollment.course.get_level_display }}</p>
+                            
+                            <!-- Progress Bar -->
+                            <div class="mb-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Progress</span>
+                                    <span class="font-semibold">{{ enrollment.calculate_progress }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-success h-2 rounded-full" style="width: {{ enrollment.calculate_progress }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="text-primary hover:underline text-sm font-semibold">Continue Learning →</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white p-8 rounded-lg text-center">
+                <p class="text-gray-600 mb-4">You haven't enrolled in any courses yet.</p>
+                <a href="{% url 'courses:course_list' %}" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">Browse Courses</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recommended Courses -->
+    <div>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-3xl font-bold">Recommended for You</h2>
+            <a href="{% url 'courses:course_list' %}" class="text-primary hover:underline">Browse All</a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for course in available_courses %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full h-48 object-cover">
+                    {% else %}
+                        <div class="w-full h-48 bg-gradient-to-r from-primary to-blue-600"></div>
+                    {% endif %}
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">{{ course.title }}</h3>
+                        <p class="text-sm text-gray-600 mb-2">{{ course.description|truncatewords:15 }}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xs bg-primary text-white px-2 py-1 rounded">{{ course.get_level_display }}</span>
+                            {% if course.is_paid %}
+                                <span class="text-secondary font-bold">${{ course.price }}</span>
+                            {% else %}
+                                <span class="text-success font-bold">Free</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="text-primary hover:underline text-sm font-semibold mt-3 block">View Course →</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

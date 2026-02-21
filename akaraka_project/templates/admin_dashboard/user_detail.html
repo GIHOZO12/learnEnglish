@@ -1,0 +1,217 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}{{ user.username }} - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Back Button -->
+    <div>
+        <a href="{% url 'admin_dashboard:user_management' %}" class="text-blue-600 hover:text-blue-800 font-semibold">← Back to Users</a>
+    </div>
+    
+    <!-- User Info -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">{{ user.username }} - User Details</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-6">Account Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Username</label>
+                        <p class="text-lg font-semibold text-gray-900">{{ user.username }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Email</label>
+                        <p class="text-lg text-gray-900">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Full Name</label>
+                        <p class="text-lg text-gray-900">{{ user.first_name }} {{ user.last_name }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Joined Date</label>
+                        <p class="text-lg text-gray-900">{{ user.date_joined|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Last Login</label>
+                        <p class="text-lg text-gray-900">{{ user.last_login|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-6">Learning Profile</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Current Level</label>
+                        <p class="text-lg text-gray-900 font-semibold">{{ user.get_current_level_display }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Total XP</label>
+                        <p class="text-3xl font-bold text-yellow-600">{{ user.total_xp }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Current Streak</label>
+                        <p class="text-lg text-gray-900">{{ user.current_streak }} days</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm font-medium block mb-1">Longest Streak</label>
+                        <p class="text-lg text-gray-900">{{ user.longest_streak }} days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Learning Progress Section -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-8">
+        <h3 class="text-2xl font-bold text-gray-900 mb-8">Learning Progress</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Overall Progress -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <label class="text-gray-600 font-medium">Overall Progress</label>
+                    <span class="text-2xl font-bold text-blue-600">{{ overall_progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-500" style="width: {{ overall_progress }}%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">{{ enrollments.count }} course{{ enrollments.count|pluralize }}</p>
+            </div>
+            
+            <!-- Lessons Progress -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <label class="text-gray-600 font-medium">Lessons Completed</label>
+                    <span class="text-2xl font-bold text-green-600">{{ lessons_progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-500" style="width: {{ lessons_progress }}%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">{{ completed_lessons }}/{{ total_lessons }} lessons</p>
+            </div>
+        </div>
+        
+        <!-- Progress Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-8 border-t">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-blue-600">{{ enrollments.count }}</div>
+                <p class="text-gray-600 text-sm">Courses Enrolled</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-600">{{ completed_lessons }}</div>
+                <p class="text-gray-600 text-sm">Lessons Completed</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-purple-600">{{ certificates.count }}</div>
+                <p class="text-gray-600 text-sm">Certificates Earned</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-yellow-600">{{ user.total_xp }}</div>
+                <p class="text-gray-600 text-sm">Total XP</p>
+            </div>
+        </div>
+    
+    <!-- Actions -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Admin Actions</h3>
+        <div class="flex gap-3">
+            <form method="POST" action="{% url 'admin_dashboard:toggle_user_status' user.id %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 rounded-lg font-medium text-white transition {% if user.is_active %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %}">
+                    {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
+                </button>
+            </form>
+            
+            <form method="POST" action="{% url 'admin_dashboard:toggle_staff_status' user.id %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 rounded-lg font-medium text-white transition {% if user.is_staff %}bg-purple-600 hover:bg-purple-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %}">
+                    {% if user.is_staff %}Remove Staff Status{% else %}Make Staff Member{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- User Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Course Enrollments</div>
+            <div class="text-4xl font-bold text-blue-600 mt-2">{{ enrollments.count }}</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Certificates Earned</div>
+            <div class="text-4xl font-bold text-green-600 mt-2">{{ certificates.count }}</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Badges Earned</div>
+            <div class="text-4xl font-bold text-purple-600 mt-2">{{ badges.count }}</div>
+        </div>
+    </div>
+    
+    <!-- Enrollments -->
+    {% if enrollments %}
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">Course Enrollments ({{ enrollments.count }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Course</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Progress</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in enrollments %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-3 font-medium text-gray-900">{{ enrollment.course.title }}</td>
+                        <td class="px-6 py-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ enrollment.get_progress_percentage }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-600 font-semibold">{{ enrollment.get_progress_percentage }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if enrollment.is_completed %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {% if enrollment.is_completed %}Completed{% else %}In Progress{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Community Posts -->
+    {% if posts %}
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">Community Posts ({{ posts.count }})</h3>
+        </div>
+        <div class="space-y-4 p-6">
+            {% for post in posts %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h4 class="font-semibold text-lg text-gray-900 mb-2">{{ post.title }}</h4>
+                <p class="text-gray-700 text-sm mb-3">{{ post.content|truncatewords:20 }}</p>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>{{ post.created_at|date:"F d, Y" }}</span>
+                    <span>💬 {{ post.get_comment_count }} comments • 👍 {{ post.get_like_count }} likes</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

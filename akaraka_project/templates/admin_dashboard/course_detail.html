@@ -1,0 +1,147 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}{{ course.title }} - Admin Dashboard{% endblock %}
+{% block page_title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Course Info -->
+    <div class="bg-gray-50 rounded-lg p-8 border border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+                <p class="text-sm font-semibold text-gray-600 uppercase">Title</p>
+                <p class="text-2xl font-bold text-gray-900 mt-2">{{ course.title }}</p>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-gray-600 uppercase">Level</p>
+                <p class="text-2xl font-bold mt-2">
+                    <span class="px-3 py-1 rounded-full text-sm {% if course.level == 'beginner' %}bg-blue-100 text-blue-800{% elif course.level == 'intermediate' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ course.get_level_display }}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-gray-600 uppercase">Type</p>
+                <p class="text-2xl font-bold mt-2">
+                    <span class="px-3 py-1 rounded-full text-sm {% if course.is_paid %}bg-orange-100 text-orange-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {% if course.is_paid %}Paid - ${{ course.price }}{% else %}Free{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <p class="text-sm font-semibold text-gray-600 uppercase mb-2">Description</p>
+            <p class="text-gray-700 leading-relaxed">{{ course.description }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 py-4 border-t border-b">
+            <div>
+                <p class="text-sm text-gray-600">Duration</p>
+                <p class="text-lg font-semibold">{{ course.estimated_duration }} min</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Total Lessons</p>
+                <p class="text-lg font-semibold">{{ course.lessons.count }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Enrollments</p>
+                <p class="text-lg font-semibold">{{ enrollments.count }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Status</p>
+                <p class="text-lg font-semibold">
+                    <span class="px-2 py-1 text-xs rounded {% if course.is_published %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if course.is_published %}Published{% else %}Draft{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-blue-50 rounded-lg p-6 border border-blue-200 flex gap-3 flex-wrap">
+        <a href="{% url 'admin_dashboard:edit_course' course.id %}" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition">Edit Course</a>
+        <a href="{% url 'admin_dashboard:lesson_management' course.id %}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition">Manage Lessons</a>
+        <form method="POST" action="{% url 'admin_dashboard:toggle_course_publish' course.id %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="px-4 py-2 {% if course.is_published %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white rounded-lg font-semibold transition">
+                {% if course.is_published %}Unpublish{% else %}Publish{% endif %}
+            </button>
+        </form>
+        <a href="{% url 'admin_dashboard:delete_course' course.id %}" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition" onclick="return confirm('Delete this course? This cannot be undone.')">Delete Course</a>
+        <a href="{% url 'admin_dashboard:course_management' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition">Back</a>
+    </div>
+
+    <!-- Lessons Section -->
+    {% if lessons %}
+    <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+        <div class="px-8 py-4 border-b bg-white">
+            <h3 class="text-xl font-bold text-gray-900">Lessons ({{ lessons.count }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Title</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Duration</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in lessons %}
+                    <tr class="border-b hover:bg-white transition">
+                        <td class="px-6 py-4">{{ forloop.counter }}</td>
+                        <td class="px-6 py-4 font-medium">{{ lesson.title }}</td>
+                        <td class="px-6 py-4">{{ lesson.duration_minutes }} min</td>
+                        <td class="px-6 py-4 text-gray-600">{{ lesson.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Enrollments Section -->
+    {% if enrollments %}
+    <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+        <div class="px-8 py-4 border-b bg-white">
+            <h3 class="text-xl font-bold text-gray-900">Student Enrollments ({{ enrollments.count }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Progress</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrolled</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in enrollments %}
+                    <tr class="border-b hover:bg-white transition">
+                        <td class="px-6 py-4">{{ enrollment.user.username }}</td>
+                        <td class="px-6 py-4">
+                            <div class="w-40 bg-gray-300 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ enrollment.get_progress_percentage }}%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">{{ enrollment.get_progress_percentage }}%</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded {% if enrollment.is_completed %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {% if enrollment.is_completed %}Completed{% else %}In Progress{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">{{ enrollment.enrolled_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

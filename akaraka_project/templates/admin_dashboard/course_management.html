@@ -1,0 +1,120 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}Course Management - Admin Dashboard{% endblock %}
+{% block page_title %}Course Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  
+    <div class="flex justify-end">
+        <a href="{% url 'admin_dashboard:create_course' %}" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition">+ Create New Course</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <form method="GET" class="space-y-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Filter & Search</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Course</label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ search_query }}"
+                        placeholder="Course title..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                    <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Courses</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid Courses</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Courses Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">All Courses</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Course Title</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Level</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Type</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrollments</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ course.title }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded font-medium {% if course.level == 'beginner' %}bg-blue-100 text-blue-800{% elif course.level == 'intermediate' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ course.get_level_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded font-medium {% if course.is_paid %}bg-orange-100 text-orange-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {% if course.is_paid %}Paid{% else %}Free{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ course.enrollments.count }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if course.is_published %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if course.is_published %}Published{% else %}Draft{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">{{ course.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2">
+                                <a href="{% url 'admin_dashboard:course_detail' course.id %}" class="text-blue-600 hover:text-blue-800 font-semibold">View</a>
+                                <a href="{% url 'admin_dashboard:edit_course' course.id %}" class="text-orange-600 hover:text-orange-800 font-semibold">Edit</a>
+                                <a href="{% url 'admin_dashboard:delete_course' course.id %}" class="text-red-600 hover:text-red-800 font-semibold" onclick="return confirm('Delete this course?')">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No courses found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if courses.has_other_pages %}
+    <div class="flex justify-center gap-2">
+        {% if courses.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">First</a>
+            <a href="?page={{ courses.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Previous</a>
+        {% endif %}
+        
+        <span class="px-4 py-2 text-gray-700 font-medium">Page {{ courses.number }} of {{ courses.paginator.num_pages }}</span>
+        
+        {% if courses.has_next %}
+            <a href="?page={{ courses.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Next</a>
+            <a href="?page={{ courses.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition">Last</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

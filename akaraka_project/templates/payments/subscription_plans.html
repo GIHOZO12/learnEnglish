@@ -1,0 +1,98 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ subscription.name }} Subscription - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-4">Choose Your Plan</h1>
+    <p class="text-center text-gray-600 text-xl mb-12">Unlock premium courses and features</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Free Plan -->
+        <div class="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-primary transition">
+            <h2 class="text-3xl font-bold mb-4">Free</h2>
+            <p class="text-gray-600 mb-6">Perfect for beginners</p>
+            <div class="text-4xl font-bold text-primary mb-6">$0<span class="text-lg">/month</span></div>
+            
+            <ul class="space-y-3 mb-8">
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Beginner courses</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Daily exercises</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Community access</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Badges & streaks</li>
+                <li class="flex items-center"><span class="text-red-500 mr-2">✗</span> Intermediate courses</li>
+                <li class="flex items-center"><span class="text-red-500 mr-2">✗</span> Certificates</li>
+            </ul>
+            
+            <button class="w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed">
+                Current Plan
+            </button>
+        </div>
+        
+        <!-- Pro Plan -->
+        <div class="bg-white border-2 border-primary rounded-lg p-8 shadow-lg relative">
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-bold">
+                Most Popular
+            </div>
+            
+            <h2 class="text-3xl font-bold mb-4">Pro</h2>
+            <p class="text-gray-600 mb-6">For serious learners</p>
+            <div class="text-4xl font-bold text-primary mb-6">$9.99<span class="text-lg">/month</span></div>
+            
+            <ul class="space-y-3 mb-8">
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> All Free features</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Intermediate courses</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Certificates</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Ad-free learning</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Priority support</li>
+                <li class="flex items-center"><span class="text-red-500 mr-2">✗</span> Advanced courses</li>
+            </ul>
+            
+            {% if user.is_authenticated and not user_subscription %}
+                <form method="post" action="{% url 'payments:checkout' 1 %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg font-bold hover:bg-blue-700">
+                        Subscribe Now
+                    </button>
+                </form>
+            {% elif user_subscription.subscription.name == subscription.name %}
+                <button class="w-full bg-gray-400 text-white py-2 rounded-lg font-bold cursor-not-allowed">
+                    Your Current Plan
+                </button>
+            {% else %}
+                <button class="w-full bg-primary text-white py-2 rounded-lg font-bold hover:bg-blue-700">
+                    Upgrade Now
+                </button>
+            {% endif %}
+        </div>
+        
+        <!-- Premium Plan -->
+        <div class="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-secondary transition">
+            <h2 class="text-3xl font-bold mb-4">Premium</h2>
+            <p class="text-gray-600 mb-6">Complete mastery</p>
+            <div class="text-4xl font-bold text-secondary mb-6">$19.99<span class="text-lg">/month</span></div>
+            
+            <ul class="space-y-3 mb-8">
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> All Pro features</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Advanced courses</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 1-on-1 tutoring</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Offline downloads</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Custom learning path</li>
+                <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Career guidance</li>
+            </ul>
+            
+            {% if user.is_authenticated and not user_subscription %}
+                <form method="post" action="{% url 'payments:checkout' 2 %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full bg-secondary text-gray-900 py-2 rounded-lg font-bold hover:bg-yellow-600">
+                        Subscribe Now
+                    </button>
+                </form>
+            {% else %}
+                <button class="w-full bg-secondary text-gray-900 py-2 rounded-lg font-bold hover:bg-yellow-600">
+                    Upgrade Now
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

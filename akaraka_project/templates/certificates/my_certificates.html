@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+
+{% block title %}Certificates - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">My Certificates</h1>
+    
+    {% if certificates %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {% for cert in certificates %}
+                <div class="bg-white rounded-lg shadow-lg p-8 border-l-4 border-primary">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">{{ cert.course.title }}</h2>
+                            <p class="text-gray-600">{{ cert.issue_date|date:"F d, Y" }}</p>
+                        </div>
+                        <span class="text-4xl">🎓</span>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4">Certificate ID: {{ cert.certificate_number }}</p>
+                    <p class="text-sm text-gray-500 mb-6">Score: {{ cert.score }}%</p>
+                    
+                    <div class="flex space-x-3">
+                        <a href="{% url 'certificates:download' cert.id %}" class="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold text-center">
+                            Download PDF
+                        </a>
+                        <a href="{% url 'certificates:certificate_detail' cert.id %}" class="flex-1 bg-gray-100 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-200 font-semibold text-center">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white p-12 rounded-lg text-center">
+            <p class="text-gray-600 text-lg mb-4">You haven't earned any certificates yet.</p>
+            <a href="{% url 'courses:course_list' %}" class="text-primary font-semibold hover:underline">Start a course to earn a certificate!</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

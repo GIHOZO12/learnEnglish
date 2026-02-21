@@ -1,0 +1,119 @@
+{% extends 'admin_dashboard/admin_base.html' %}
+
+{% block title %}Analytics - Admin Dashboard{% endblock %}
+{% block page_title %}Analytics & Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Period Filter -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <form method="GET" class="flex items-end gap-4">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Period</label>
+                <select name="period" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="this.form.submit()">
+                    <option value="7" {% if period == '7' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="30" {% if period == '30' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="90" {% if period == '90' %}selected{% endif %}>Last 90 Days</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">New Users</div>
+            <div class="text-4xl font-bold mt-2 text-gray-900">{{ new_users }}</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">New Enrollments</div>
+            <div class="text-4xl font-bold mt-2 text-gray-900">{{ new_enrollments }}</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Completion Rate</div>
+            <div class="text-4xl font-bold mt-2 text-gray-900">{{ completion_rate }}%</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-gray-600 text-sm font-medium">Period</div>
+            <div class="text-lg font-bold mt-2 text-gray-900">
+                {% if period == '7' %}Last 7 Days
+                {% elif period == '90' %}Last 90 Days
+                {% else %}Last 30 Days{% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popular Courses -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">Most Popular Courses</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Course Title</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrollments</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in popular_courses %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-gray-900">{{ forloop.counter }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ course.title }}</td>
+                        <td class="px-6 py-4 font-bold text-gray-900">{{ course.enrollment_count }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded font-medium {% if course.level == 'beginner' %}bg-blue-100 text-blue-800{% elif course.level == 'intermediate' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ course.get_level_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Most Active Users -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="px-8 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900">Most Active Users (Exercises Attempted)</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Username</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Level</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Exercises Attempted</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Total XP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in active_users %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-gray-900">{{ forloop.counter }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            <a href="{% url 'admin_dashboard:user_detail' user.id %}" class="text-blue-600 hover:text-blue-800">{{ user.username }}</a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded font-medium {% if user.current_level == 'beginner' %}bg-blue-100 text-blue-800{% elif user.current_level == 'intermediate' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ user.get_current_level_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 font-bold text-gray-900">{{ user.exercise_count }}</td>
+                        <td class="px-6 py-4 font-bold text-yellow-600">{{ user.total_xp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends 'base/base.html' %}
+
+{% block title %}My Learning Progress - Akaraka{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">My Learning Journey</h1>
+        <p class="text-gray-600">Track your progress and celebrate your achievements</p>
+    </div>
+    
+    <!-- Overall Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <!-- Overall Progress -->
+        <div class="bg-white rounded-lg shadow-lg border-l-4 border-blue-600 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Overall Progress</p>
+                    <p class="text-4xl font-bold text-blue-600 mt-2">{{ overall_progress }}%</p>
+                </div>
+                <div class="text-5xl opacity-20">📊</div>
+            </div>
+        </div>
+        
+        <!-- Lessons Completed -->
+        <div class="bg-white rounded-lg shadow-lg border-l-4 border-green-600 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Lessons Completed</p>
+                    <p class="text-4xl font-bold text-green-600 mt-2">{{ completed_lessons }}/{{ total_lessons }}</p>
+                </div>
+                <div class="text-5xl opacity-20">✅</div>
+            </div>
+        </div>
+        
+        <!-- Courses Enrolled -->
+        <div class="bg-white rounded-lg shadow-lg border-l-4 border-purple-600 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Courses Enrolled</p>
+                    <p class="text-4xl font-bold text-purple-600 mt-2">{{ enrollments.count }}</p>
+                </div>
+                <div class="text-5xl opacity-20">📚</div>
+            </div>
+        </div>
+        
+        <!-- Total XP -->
+        <div class="bg-white rounded-lg shadow-lg border-l-4 border-yellow-600 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Total XP Earned</p>
+                    <p class="text-4xl font-bold text-yellow-600 mt-2">{{ user.total_xp }}</p>
+                </div>
+                <div class="text-5xl opacity-20">⭐</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Learning Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <!-- Overall Learning Progress -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Overall Learning Progress</h2>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-gray-700 font-medium">Your Progress</span>
+                        <span class="text-3xl font-bold text-blue-600">{{ overall_progress }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-6 rounded-full transition-all duration-500" style="width: {{ overall_progress }}%"></div>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-gray-700">
+                        <span class="font-semibold">You're {{ overall_progress }}% done!</span> Keep up the great work. 
+                        {% if overall_progress < 50 %}
+                            You're just getting started - keep going!
+                        {% elif overall_progress < 80 %}
+                            You're more than halfway there - almost there!
+                        {% else %}
+                            Almost finished - you're so close!
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Your Achievements -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Achievements</h2>
+            <div class="space-y-4">
+                <!-- Certificates -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🏆</span>
+                        <div>
+                            <p class="font-semibold text-gray-900">Certificates Earned</p>
+                            <p class="text-sm text-gray-600">{{ certificates.count }} certificate{{ certificates.count|pluralize }}</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-yellow-600">{{ certificates.count }}</p>
+                </div>
+                
+                <!-- Badges -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🎖️</span>
+                        <div>
+                            <p class="font-semibold text-gray-900">Badges Earned</p>
+                            <p class="text-sm text-gray-600">{{ badges.count }} badge{{ badges.count|pluralize }}</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-purple-600">{{ badges.count }}</p>
+                </div>
+                
+                <!-- Streak -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🔥</span>
+                        <div>
+                            <p class="font-semibold text-gray-900">Current Streak</p>
+                            <p class="text-sm text-gray-600">{{ user.current_streak }} day{{ user.current_streak|pluralize }}</p>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-red-600">{{ user.current_streak }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Courses Progress -->
+    {% if enrollments %}
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8">Your Courses</h2>
+        <div class="space-y-6">
+            {% for enrollment in enrollments %}
+            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900">{{ enrollment.course.title }}</h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold mr-2">
+                                {{ enrollment.course.get_level_display }}
+                            </span>
+                            <span class="text-gray-500">{{ enrollment.course.lessons.count }} lessons</span>
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-bold text-blue-600">{{ enrollment.progress_percentage }}%</p>
+                        {% if enrollment.is_completed %}
+                        <p class="text-sm text-green-600 font-semibold">✓ Completed</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-600">Progress</span>
+                        <span class="text-gray-900 font-semibold">{{ enrollment.progress_percentage }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ enrollment.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Course Actions -->
+                <div class="flex gap-3">
+                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-center transition">
+                        Continue Learning
+                    </a>
+                    {% if enrollment.progress_percentage >= 100 %}
+                    <button class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                        View Certificate
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Milestones -->
+    <div class="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white">
+        <h2 class="text-2xl font-bold mb-8">Your Milestones</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-4xl mb-2">{% if overall_progress >= 25 %}✓{% else %}○{% endif %}</div>
+                <p class="font-semibold">25% Progress</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-2">{% if overall_progress >= 50 %}✓{% else %}○{% endif %}</div>
+                <p class="font-semibold">50% Progress</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-2">{% if overall_progress >= 75 %}✓{% else %}○{% endif %}</div>
+                <p class="font-semibold">75% Progress</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-2">{% if overall_progress >= 100 %}✓{% else %}○{% endif %}</div>
+                <p class="font-semibold">100% Complete</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
